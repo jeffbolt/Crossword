@@ -1,0 +1,14 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Crossword.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="GridNumber" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"&gt;
+&lt;svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xml="http://www.w3.org/XML/1998/namespace" width="20" height="20"&gt;
+  &lt;g&gt;
+    &lt;text x="2px" y="8px" stroke-width="1px" font-family="Arial" font-size="8px" font="Arial" style="fill:white;stroke:black;"&gt;{0}&lt;/text&gt;
+  &lt;/g&gt;
+&lt;/svg&gt;</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
