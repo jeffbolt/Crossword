@@ -22,8 +22,8 @@
 		}
 
 		.grid td {
-			height: 30px;
-			width: 30px;
+			height: 32px;
+			width: 32px;
 			border: 1px solid black;
 		}
 
@@ -101,15 +101,9 @@
 			frm.submit();
 		}
 
-		function cellClick(id) {
-			try {
-
-				var cell = document.getElementById(id);
-				cell.select();
-				cell.focus();
-			} catch (e) {
-				console.error(e);
-			}
+		function cellCheck() {
+			var frm = document.forms["Crossword"];
+			frm.submit();
 		}
 	</script>
 </head>
@@ -117,7 +111,7 @@
 	<form id="Crossword" runat="server">
 		<asp:HiddenField ID="Step" runat="server" />
 		<div>
-			<h2>Crossword</h2>
+			<h1>Crossword</h1>
 		</div>
 
 		<%-- Step 1 --%>
@@ -132,13 +126,13 @@
 					<tr>
 						<td>Rows:</td>
 						<td>
-							<asp:TextBox ID="txtRows" runat="server" MaxLength="3" Width="20px">10</asp:TextBox>
+							<asp:TextBox ID="txtRows" runat="server" MaxLength="3" Width="20px">15</asp:TextBox>
 						</td>
 					</tr>
 					<tr>
 						<td>Columns:</td>
 						<td>
-							<asp:TextBox ID="txtColumns" runat="server" MaxLength="3" Width="20px">10</asp:TextBox>
+							<asp:TextBox ID="txtColumns" runat="server" MaxLength="3" Width="20px">15</asp:TextBox>
 						</td>
 					</tr>
 				</table>

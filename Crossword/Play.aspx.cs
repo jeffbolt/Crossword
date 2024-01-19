@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.IO;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -8,7 +7,6 @@ namespace Crossword
 {
 	public partial class Play : System.Web.UI.Page
 	{
-		//public const int GridSize = 30;
 		public const int MaxGridArea = 100000;
 		public const int CheckSize = 18;
 		public const int TextSize = 18;
@@ -16,15 +14,9 @@ namespace Crossword
 		public const int MinColumns = 5;
 
 		public int ThisStep = 1;
-		//public string ImagesPath = "";
 		
 		protected void Page_Load(object sender, EventArgs e)
 		{
-			//string root = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()?.Location ?? string.Empty);
-			//ImagesPath = Path.Combine(Server.MapPath("/"), "Images/Grid");
-			//if (!Directory.Exists(ImagesPath))
-			//	Directory.CreateDirectory(ImagesPath);
-			
 			if (Page.IsPostBack)
 			{
 				if (!int.TryParse(Step.Value, out ThisStep))
@@ -103,9 +95,6 @@ namespace Crossword
 		{
 			tblGrid.Rows.Clear();
 
-			//string cssPath = CreateCss(rows * columns);
-			//ClientScript.RegisterStartupScript(base.GetType(), "GridStyle", $"<link rel=\"stylesheet\" href=\"{cssPath}\" />");
-
 			TableRow tr;
 			int cellCount = 0;
 			int gridNumber = 0;
@@ -130,6 +119,8 @@ namespace Crossword
 
 					if (ThisStep == 2)
 					{
+						SetBackground(tc, r, c, ref gridNumber);
+
 						// Add checkboxes to set blank cells
 						var chk = new CheckBox
 						{
@@ -139,40 +130,16 @@ namespace Crossword
 							BorderStyle = BorderStyle.None,
 							CssClass = "cell"
 						};
-						//chk.Attributes.Add("onclick", $"cellClick('{txt.ID}');");
+						chk.Attributes.Add("onclick", $"cellCheck('{chk.ID}');");
 						tc.Controls.Add(chk);
 					}
 					else if (ThisStep == 3)
 					{
-						// Add blank cell if checked, otherwise add textbox and number if beginning of new answer
-						if (Request.Form[chkId]?.ToLower() == "on")
-						{
-							// This cell is blank
-							tc.BackColor = Color.Black;
-						}
-						else
-						{
-							//tc.Attributes["class"] = $"grid_bg_{cellNum}";
-							
-							string leftChkId = $"Chk_{r}_{c - 1}";      // Cell to the left of this
-							string rightChkId = $"Chk_{r}_{c + 1}";      // Cell to the right of this
-							string prevRowChkId = $"Chk_{r - 1}_{c}";	// Cell above this row
-							string nextRowChkId = $"Chk_{r + 1}_{c}";   // Cell below this row
+						SetBackground(tc, r, c, ref gridNumber);
 
-							/* This cell is not blank. Add a number to...
-								- all cells in first row
-								- all cells in first column
-								- any other cell with a blank to the left but not to the right, or a blank above but not below
-							*/
-							if (r == 0 || c == 0 ||
-								(Request.Form[leftChkId] != null && Request.Form[rightChkId] == null) ||
-								(Request.Form[prevRowChkId] != null && Request.Form[nextRowChkId] == null))
-							{
-								gridNumber++;
-								// Add background SVG as inline style
-								tc.Attributes["style"] = Server.HtmlEncode(SimpleSvg.GetGridCss(gridNumber));
-							}
-							
+						// Add blank cell if checked, otherwise add textbox and number if beginning of new answer
+						if (Request.Form[chkId] == null)
+						{
 							var txt = new TextBox
 							{
 								ID = $"Text_{r}_{c}",
@@ -183,7 +150,7 @@ namespace Crossword
 								BorderStyle = BorderStyle.None,
 								CssClass = "cell"
 							};
-							//txt.Attributes.Add("onclick", $"cellClick('{txt.ID}');");
+							//txt.Attributes.Add("onclick", $"textClick('{txt.ID}');");
 							tc.Controls.Add(txt);
 						}
 					}
@@ -194,31 +161,63 @@ namespace Crossword
 			}
 		}
 
-		private string CreateCss(int count)
+		private void SetBackground(TableCell tc, int row, int cell, ref int number)
 		{
-			// See https://www.svgbackgrounds.com/how-to-add-svgs-with-css-background-image/
-			string filename = "Grid.css"; //Guid.NewGuid().ToString();
-			string path = Path.Combine(Server.MapPath("/"), filename);
+			string chkId = $"Chk_{row}_{cell}";
 
-			if (!File.Exists(path))
-				using (var outputFile = new StreamWriter(path))
-					for (int i = 1; i <= count; i++)
-					{
-						//string svg = SvgService.CreateGridSvg(i)
-						string svg = SimpleSvg.CreateGridNumber(i)
-							.Replace("<?", "<%3F")
-							.Replace("?>", "%3F>")
-							.Replace("\\", "")
-							.Replace("\r\n", "")
-							.Replace("  ", " ")
-							.Replace("  ", " ");
-						//.Replace(" <", "<")
-						//.Replace("> ", ">");
-						string css = $".grid_bg_{i} {{background-image: url('data:image/svg+xml,{svg}');}}";
-						outputFile.WriteLine(css);
-					}
-			return filename;
+			if (Request.Form[chkId]?.ToLower() == "on")
+			{
+				// This cell is blank
+				tc.BackColor = Color.Black;
+			}
+			else
+			{
+				/* This cell is not blank. Add a number to...
+					- all cells in first row
+					- all cells in first column
+					- any other cell with a blank to the left but not to the right, or a blank above but not below
+				*/
+				string leftChkId = $"Chk_{row}_{cell - 1}";      // Cell to the left of this
+				string rightChkId = $"Chk_{row}_{cell + 1}";     // Cell to the right of this
+				string prevRowChkId = $"Chk_{row - 1}_{cell}";   // Cell above this row
+				string nextRowChkId = $"Chk_{row + 1}_{cell}";   // Cell below this row
+
+				if (row == 0 || cell == 0 ||
+					(Request.Form[leftChkId] != null && Request.Form[rightChkId] == null) ||
+					(Request.Form[prevRowChkId] != null && Request.Form[nextRowChkId] == null))
+				{
+					number++;
+					// Add background SVG as inline style
+					tc.Attributes["style"] = Server.HtmlEncode(SimpleSvg.GetGridCss(number));
+				}
+			}
 		}
+
+		//private string CreateCss(int count)
+		//{
+		//	// See https://www.svgbackgrounds.com/how-to-add-svgs-with-css-background-image/
+		//	string filename = "Grid.css"; //Guid.NewGuid().ToString();
+		//	string path = Path.Combine(Server.MapPath("/"), filename);
+
+		//	if (!File.Exists(path))
+		//		using (var outputFile = new StreamWriter(path))
+		//			for (int i = 1; i <= count; i++)
+		//			{
+		//				//string svg = SvgService.CreateGridSvg(i)
+		//				string svg = SimpleSvg.CreateGridNumber(i)
+		//					.Replace("<?", "<%3F")
+		//					.Replace("?>", "%3F>")
+		//					.Replace("\\", "")
+		//					.Replace("\r\n", "")
+		//					.Replace("  ", " ")
+		//					.Replace("  ", " ");
+		//				//.Replace(" <", "<")
+		//				//.Replace("> ", ">");
+		//				string css = $".grid_bg_{i} {{background-image: url('data:image/svg+xml,{svg}');}}";
+		//				outputFile.WriteLine(css);
+		//			}
+		//	return filename;
+		//}
 
 		//private void createBackgroundImages(int count)
 		//{
