@@ -24,6 +24,15 @@ namespace Crossword
 		protected global::System.Web.UI.HtmlControls.HtmlForm Crossword;
 
 		/// <summary>
+		/// ScriptManager1 control.
+		/// </summary>
+		/// <remarks>
+		/// Auto-generated field.
+		/// To modify move field declaration from designer file to code-behind file.
+		/// </remarks>
+		protected global::System.Web.UI.ScriptManager ScriptManager1;
+
+		/// <summary>
 		/// Step control.
 		/// </summary>
 		/// <remarks>
@@ -60,6 +69,15 @@ namespace Crossword
 		protected global::System.Web.UI.WebControls.TextBox txtColumns;
 
 		/// <summary>
+		/// btnStep1 control.
+		/// </summary>
+		/// <remarks>
+		/// Auto-generated field.
+		/// To modify move field declaration from designer file to code-behind file.
+		/// </remarks>
+		protected global::System.Web.UI.HtmlControls.HtmlInputButton btnStep1;
+
+		/// <summary>
 		/// pnlStep2 control.
 		/// </summary>
 		/// <remarks>
@@ -67,6 +85,15 @@ namespace Crossword
 		/// To modify move field declaration from designer file to code-behind file.
 		/// </remarks>
 		protected global::System.Web.UI.WebControls.Panel pnlStep2;
+
+		/// <summary>
+		/// upCallback control.
+		/// </summary>
+		/// <remarks>
+		/// Auto-generated field.
+		/// To modify move field declaration from designer file to code-behind file.
+		/// </remarks>
+		protected global::System.Web.UI.UpdatePanel upCallback;
 
 		/// <summary>
 		/// tblGrid control.

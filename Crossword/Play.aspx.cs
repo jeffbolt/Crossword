@@ -111,8 +111,7 @@ namespace Crossword
 					cellCount++;
 					var tc = new TableCell
 					{
-						ID = $"Cell_{r}_{c}",
-						CssClass = "cell"
+						ID = $"Cell_{r}_{c}"
 					};
 
 					string chkId = $"Chk_{r}_{c}";
@@ -125,12 +124,16 @@ namespace Crossword
 						var chk = new CheckBox
 						{
 							ID = chkId,
-							Height = Unit.Pixel(CheckSize),
-							Width = Unit.Pixel(CheckSize),
-							BorderStyle = BorderStyle.None,
-							CssClass = "cell"
 						};
 						chk.Attributes.Add("onclick", $"cellCheck('{chk.ID}');");
+						//chk.CheckedChanged += new EventHandler(CheckChange);
+						//upCallback.ContentTemplateContainer.Controls.Add(chk);
+						//upCallback.Triggers.Add(new AsyncPostBackTrigger
+						//{
+						//	ControlID = chk.UniqueID,
+						//	EventName = "CheckedChanged"
+						//});
+						//ScriptManager1.RegisterAsyncPostBackControl(chk);
 						tc.Controls.Add(chk);
 					}
 					else if (ThisStep == 3)
@@ -143,12 +146,7 @@ namespace Crossword
 							var txt = new TextBox
 							{
 								ID = $"Text_{r}_{c}",
-								Text = "",
-								MaxLength = 1,
-								Height = Unit.Pixel(TextSize),
-								Width = Unit.Pixel(TextSize),
-								BorderStyle = BorderStyle.None,
-								CssClass = "cell"
+								MaxLength = 1
 							};
 							//txt.Attributes.Add("onclick", $"textClick('{txt.ID}');");
 							tc.Controls.Add(txt);
@@ -160,6 +158,30 @@ namespace Crossword
 				}
 			}
 		}
+
+		protected void CheckChange(object sender, EventArgs e)
+		{
+
+		}
+
+		//private void RegisterCheckboxes(List<string> CheckBoxIDs)
+		//{
+		//	foreach(string chkId in CheckBoxIDs)
+		//	{
+		//		CheckBox chk = (CheckBox)upCallback.FindControl(chkId);
+		//		if (chk != null)
+		//		{
+		//			//ScriptManager1.RegisterPostBackControl(chk);
+		//			//ScriptManager.GetCurrent(Page).RegisterAsyncPostBackControl(chk);
+
+		//			upCallback.Triggers.Add(new PostBackTrigger
+		//			{
+		//				ControlID = chk.UniqueID
+		//				//EventName = "Click"
+		//			});
+		//		}
+		//	}
+		//}
 
 		private void SetBackground(TableCell tc, int row, int cell, ref int number)
 		{

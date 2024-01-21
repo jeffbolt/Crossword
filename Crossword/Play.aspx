@@ -7,7 +7,7 @@
 	<title>Crossword</title>
 
 	<style type="text/css">
-		html, input {
+		body, input {
 			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 			font-size: 9pt;
 		}
@@ -19,6 +19,14 @@
 		table {
 			border-collapse: collapse;
 			empty-cells: show;
+		}
+
+		fieldset {
+			 width: 200px;
+		}
+
+		.grid {
+			/*display: inline-block;*/
 		}
 
 		.grid td {
@@ -34,62 +42,73 @@
 		}
 
 		.grid input[type=text] {
-			font-size: 16px;
+			height: 18px;
+			width: 18px;
+			border: 0;
+			font-size: 18px;
 			font-weight: 600;
 			text-transform: uppercase;
 			text-align: center;
 			vertical-align: middle;
 		}
 
+		.grid input[type=checkbox] {
+			height: 22px;
+			width: 22px;
+			border: 0;
+			font-size: 8px;
+			text-align: center;
+			vertical-align: middle;
+			cursor: pointer;
+			-webkit-appearance: none;
+			appearance: none;
+		}
+
+			.grid td:has(input[type=checkbox]):hover {
+				background-color: gainsboro;
+			}
+			
 		legend {
-			/*border: 1px solid #bababa;*/
 			padding: 5px;
 		}
 
-		input[type=button], input[type=submit] {
+		.button {
 			border: 1px solid;
 			border-color: royalblue;
 			background-color: dodgerblue;
-			color: white;
+			border-radius: 2px;
+			box-shadow: 3px 3px 0 rgba(1, 1, 1, 0.11);
+			color: #ffffffe0;
 			font-weight: 600;
 			height: 25px;
 			min-width: 80px;
 			text-align: center;
+			margin: 4px;
+			cursor: pointer;
 		}
+
+			.button:hover {
+				color: white;
+			}
+
+			.button:focus {
+				color: white;
+				border-color: dodgerblue;
+				background-color: royalblue;
+				box-shadow: none;
+				-webkit-transform: translate(2px, 2px);
+				transform: translate(2px, 2px)
+			}
 	</style>
 
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 	<script type="text/javascript">
-		//$(document).ready(function () {
-		//	$('.cell').addEventListener("click", function () {
-		//		console.log(this);
-		//	});
-		//});
-
-		//$(document).on("click", ".cell", function (e) {
-		//	var id = e.target.id;
-		//	//console.log("id=" + id)
-		//	var cell = $("#" + id);
-		//	if (e.which == 1) {
-		//		cell.css("background-color", "white");
-		//		cell.prop("readonly", "false");
-		//		break;
-		//	}
-		//}
-
-		/*$(document).on("contextmenu", ".cell", function (e) {
-			var id = e.target.id;
-			console.log("id=" + id);
-			var cell = $("#" + id);
-
-			if (e.which == 3) {
-				cell.val("");
-				cell.css("background-color", "black");
-				cell.prop("readonly", "true");
-			}
-			return false;
+		$(document).ready(function () {
+			// Set cell bg black if checked
+			$(".grid").find("input[type='checkbox']").click(function () {
+				$(this).parent().css("background-color", this.checked ? "#000" : "#fff");
+			});
 		});
-		*/
 
 		function nextStep(step) {
 			if (step == 1) {
@@ -109,15 +128,16 @@
 </head>
 <body>
 	<form id="Crossword" runat="server">
+		<asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
 		<asp:HiddenField ID="Step" runat="server" />
 		<div>
 			<h1>Crossword</h1>
 		</div>
-
+		
 		<%-- Step 1 --%>
 		<asp:Panel ID="pnlStep1" runat="server" Visible="false" style="padding-bottom: 20px;">
-			<fieldset id="fsDimensions" style="width: 200px">
-				<legend>Step 1) Choose Dimensions</legend>
+			<fieldset id="fsDimensions">
+				<legend>Choose Dimensions</legend>
 				<table>
 					<colgroup>
 						<col style="width: 100px" />
@@ -137,32 +157,38 @@
 					</tr>
 				</table>
 				<div style="padding-top: 10px; text-align: center">
-					<input type="button" id="btnReset1" onclick="nextStep(1);" value="Reset" />
-					<input type="button" id="btnStep1" onclick="nextStep(2);" value="Next >>" />
+					<input type="button" id="btnReset1" onclick="nextStep(1);" class="button" value="Reset" />
+					<input type="button" id="btnStep1" runat="server" class="button" onclick="nextStep(2);" value="Next >>" />
 				</div>
 			</fieldset>
 		</asp:Panel>
 
 		<%-- Step 2 --%>
 		<asp:Panel ID="pnlStep2" runat="server" Visible="false" style="padding-bottom: 20px;">
-			<fieldset id="fsLayout" style="width: 200px">
-				<legend>Step 2) Set Layout</legend>
+			<fieldset id="fsLayout">
+				<legend>Set Layout</legend>
 				<p>
-					Check cells to insert blanks.
+					Click cells to insert blanks.
 				</p>
 				<div style="padding-top: 10px; text-align: center">
-					<input type="button" id="btnReset2" onclick="nextStep(1);" value="Reset" />
-					<input type="button" id="btnStep2" onclick="nextStep(3);" value="Next >>" />
+					<input type="button" id="btnReset2" onclick="nextStep(1);" class="button" value="Reset" />
+					<input type="button" id="btnStep2" onclick="nextStep(3);" class="button" value="Next >>" />
 				</div>
 			</fieldset>
 		</asp:Panel>
 
 		<%-- Grid --%>
-		<asp:Table ID="tblGrid" runat="server" CssClass="grid"></asp:Table>
+		<asp:UpdatePanel ID="upCallback" runat="server">
+			<ContentTemplate>
+				<asp:Table ID="tblGrid" runat="server" CssClass="grid"></asp:Table>
+			</ContentTemplate>
+		</asp:UpdatePanel>
 
 		<%-- Step 3 --%>
-		<asp:Panel ID="pnlStep3" runat="server" Visible="false" style="padding-top: 20px;">
-			<input type="button" id="btnReset3" onclick="nextStep(1);" value="Reset" />
+		<asp:Panel ID="pnlStep3" runat="server" Visible="false">
+			<div style="padding-top: 20px;">
+				<input type="button" id="btnReset3" onclick="nextStep(1);" class="button" value="Reset" />
+			</div>
 		</asp:Panel>
 
 		<%-- Error --%>
