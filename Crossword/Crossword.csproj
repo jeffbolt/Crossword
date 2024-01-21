@@ -70,6 +70,7 @@
     <Content Include="App_Data\SvgGridNumber.xml" />
     <Content Include="Play.aspx" />
     <Content Include="Global.asax" />
+    <Content Include="Svg\char.svg" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -92,7 +93,6 @@
     <Compile Include="SimpleSvg.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
