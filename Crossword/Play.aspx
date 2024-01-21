@@ -24,6 +24,10 @@
 		fieldset {
 			 width: 200px;
 		}
+					
+		legend {
+			padding: 5px;
+		}
 
 		.grid {
 			/*display: inline-block;*/
@@ -67,10 +71,6 @@
 			.grid td:has(input[type=checkbox]):hover {
 				background-color: gainsboro;
 			}
-			
-		legend {
-			padding: 5px;
-		}
 
 		.button {
 			border: 1px solid;
@@ -104,7 +104,6 @@
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 	<script src="/SvgNumber.js"></script>
 	<script type="text/javascript">
-
 		$(document).ready(function () {
 			// Set cell bg black if checked
 			$(".grid").find("input[type='checkbox']").click(function () {

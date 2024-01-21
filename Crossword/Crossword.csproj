@@ -69,6 +69,7 @@
   <ItemGroup>
     <Content Include="App_Data\SvgGridNumber.xml" />
     <Content Include="Callback.asmx" />
+    <Content Include="Crossword.html" />
     <Content Include="Play.aspx" />
     <Content Include="Global.asax" />
     <Content Include="SvgNumber.js" />
