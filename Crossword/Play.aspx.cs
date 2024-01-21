@@ -125,7 +125,8 @@ namespace Crossword
 						{
 							ID = chkId,
 						};
-						chk.Attributes.Add("onclick", $"cellCheck('{chk.ID}');");
+						//chk.Attributes.Add("onclick", $"cellCheck('{chk.ID}');");
+
 						//chk.CheckedChanged += new EventHandler(CheckChange);
 						//upCallback.ContentTemplateContainer.Controls.Add(chk);
 						//upCallback.Triggers.Add(new AsyncPostBackTrigger
@@ -159,11 +160,6 @@ namespace Crossword
 			}
 		}
 
-		protected void CheckChange(object sender, EventArgs e)
-		{
-
-		}
-
 		//private void RegisterCheckboxes(List<string> CheckBoxIDs)
 		//{
 		//	foreach(string chkId in CheckBoxIDs)
@@ -186,6 +182,7 @@ namespace Crossword
 		private void SetBackground(TableCell tc, int row, int cell, ref int number)
 		{
 			string chkId = $"Chk_{row}_{cell}";
+			tc.CssClass = "cell";
 
 			if (Request.Form[chkId]?.ToLower() == "on")
 			{
@@ -210,7 +207,8 @@ namespace Crossword
 				{
 					number++;
 					// Add background SVG as inline style
-					tc.Attributes["style"] = Server.HtmlEncode(SimpleSvg.GetGridCss(number));
+					//tc.Attributes["style"] = Server.HtmlEncode(SimpleSvg.GetGridCss(number));
+					tc.Style["background-image"] = SimpleSvg.GetGridCss(number);
 				}
 			}
 		}

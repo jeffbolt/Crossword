@@ -102,11 +102,14 @@
 	</style>
 
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+	<script src="/SvgNumber.js"></script>
 	<script type="text/javascript">
+
 		$(document).ready(function () {
 			// Set cell bg black if checked
 			$(".grid").find("input[type='checkbox']").click(function () {
 				$(this).parent().css("background-color", this.checked ? "#000" : "#fff");
+				setBackgrounds();
 			});
 		});
 
@@ -115,14 +118,82 @@
 				window.location.href = window.location.href;
 				return 0;
 			}
+			
 			var frm = document.forms["Crossword"];
 			frm.Step.value = step;
 			frm.submit();
 		}
 
 		function cellCheck() {
+			// Postback method
 			var frm = document.forms["Crossword"];
 			frm.submit();
+		}
+
+		function isChecked(chk) {
+			return chk.prop("id") !=undefined && chk.prop("checked");
+		}
+
+		function setBackgrounds() {
+			// Pure JS method
+			try {
+				var number = 0;
+				var cells = $(".grid").find(".cell");
+
+				for (var i = 0; i < cells.length; i++) {
+					var id = cells[i].id;
+					var arr = new String(id).replace("Cell_", "").split("_");
+					var row = parseInt(arr[0]);
+					var cell = parseInt(arr[1]);
+
+					var thisCellId = $("#" + id);							// This table cell
+					var thisChkId = $("#Chk_" + row + "_" + cell);			// The checkbox inside
+					var leftChkId = $("#Chk_" + row + "_" + (cell - 1));	// Checkbox to the left of this
+					var rightChkId = $("#Chk_" + row + "_" + (cell + 1));	// Checkbox to the right of this
+					var prevRowChkId = $("#Chk_" + (row - 1) + "_" + cell);	// Checkbox above this row
+					var nextRowChkId = $("#Chk_" + (row + 1) + "_" + cell);	// Checkbox below this row
+
+					if (isChecked(thisChkId)) {
+						//cells[i].style["background-image"] = "none";
+						thisCellId.css("background-image", "none");
+					}
+					else if (row == 0 || cell == 0 ||
+						(isChecked(leftChkId) && !isChecked(rightChkId)) ||
+						(isChecked(prevRowChkId) && !isChecked(nextRowChkId))) {
+						number++;
+						// Add background SVG as inline style
+						var img = SvgNumber.replace("{0}", number);
+						thisCellId.css("background-image", img);
+					} else {
+						thisCellId.css("background-image", "none");
+					}
+				}
+			} catch (e) {
+				console.warn("Exception raised in setBackgrounds()\n" + e);
+			}
+		}
+		
+		function getGridCss(number) {
+			// Ajax callback method
+			$.ajax({
+				type: "POST",
+				url: '/Callback.asmx/GetGridCss',
+				data: '{number: "' + number + '"}',
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function (data) {
+					var svg = data.d;
+					return svg;
+				},
+				error: function (response) {
+					console.log("Error in getGridCss(): " + response.error);
+					return "";
+				},
+				failure: function (response) {
+					console.log("Failure in getGridCss(): " + response.failure);
+					return "";
+				}
+			});
 		}
 	</script>
 </head>

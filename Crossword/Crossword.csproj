@@ -68,12 +68,18 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Data\SvgGridNumber.xml" />
+    <Content Include="Callback.asmx" />
     <Content Include="Play.aspx" />
     <Content Include="Global.asax" />
+    <Content Include="SvgNumber.js" />
     <Content Include="Svg\char.svg" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Callback.asmx.cs">
+      <DependentUpon>Callback.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Play.aspx.cs">
       <DependentUpon>Play.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
