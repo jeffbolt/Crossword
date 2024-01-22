@@ -136,6 +136,9 @@
 		
 		function nextStep(step) {
 			//console.log("step=" + step);
+			if (!validateInput()) {
+				return false;
+			}
 			$("#divError").addClass("hidden");
 			
 			switch (step) {
@@ -178,7 +181,7 @@
 			} else if (rows * cols > MaxGridArea) {
 				displayError("Grid area cannot exceed " + MaxGridArea + ".");
 				return false;
-			}
+			}	
 			return true;
 		}
 
