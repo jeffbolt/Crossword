@@ -143,7 +143,6 @@
 					$("#divStep1").removeClass("hidden");
 					$("#divStep2").addClass("hidden");
 					$("#divStep3").addClass("hidden");
-					$("#divGrid").html("");
 					$("#divGrid").addClass("hidden");
 					break;
 				case 2:
@@ -194,6 +193,9 @@
 				var cols = parseInt($("#txtColumns").val());
 				var cellCount = 0;
 				var gridNumber = 0;
+				
+				$("#divGrid").html("");
+				
 				var tbl = $(document.createElement("table")).appendTo("#divGrid");
 				tbl.prop("id", "tblGrid");
 				tbl.prop("class", "grid");
@@ -217,6 +219,22 @@
 							var txt = $(document.createElement("input")).appendTo(td);
 							txt.prop("id", "Text_" + r + "_" + c);
 							txt.prop("type", "text");
+							txt.prop("maxlength", "1");
+							// keyboard events
+							txt.focus(function () {
+								this.select();
+							});
+							txt.keyup(function (e) {
+								console.log(e.which + ' ' + e.key)
+								switch (e.key) {
+									case "Backspace":
+										movePrev(this);
+										break;
+									default:
+										moveNext(this);
+										break;
+									}
+							});
 						}
 					}
 				}
@@ -224,6 +242,18 @@
 			} catch (e) {
 				console.warn("Exception raised in buildTable()\n" + e);
 			}
+		}
+		
+		function moveNext(txt) {
+			var next = txt.parentElement.nextSibling.firstElementChild;
+			next.select();
+			next.focus();
+		}
+		
+		function movePrev(txt) {
+			var prev = txt.parentElement.previousElementSibling.firstElementChild;
+			prev.select();
+			prev.focus();
 		}
 		
 		function cellCheck(chk) {
