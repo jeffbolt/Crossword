@@ -119,9 +119,11 @@
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 	<script type="text/javascript">
 		const SvgNumber = 'url("data:image/svg+xml,<%3Fxml%20version=\\"1.0\\"%20encoding=\\"utf-8\\"%3F><!DOCTYPE%20svg%20PUBLIC%20\\"-//W3C//DTD%20SVG%201.1//EN\\"%20\\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\\"><svg%20version=\\"1.1\\"%20xmlns=\\"http://www.w3.org/2000/svg\\"%20xmlns:xlink=\\"http://www.w3.org/1999/xlink\\"%20xmlns:xml=\\"http://www.w3.org/XML/1998/namespace\\"%20width=\\"30\\"%20height=\\"30\\"><g><text%20x=\\"1px\\"%20y=\\"7px\\"%20font-family=\\"Arial\\"%20font-size=\\"8px\\"%20font=\\"Arial\\"%20style=\\"fill:gray;\\">{0}</text></g></svg>")';
-		const MaxGridArea = 100000;
+		const MaxGridArea = 2500;
 		const MinRows = 5;
 		const MinColumns = 5;
+		const MaxRows = 50;
+		const MaxColumns = 50;
 		
 		$(document).ready(function () {
 			// Set cell bg black if checked
@@ -172,10 +174,10 @@
 			var rows = parseInt($("#txtRows").val());
 			var cols = parseInt($("#txtColumns").val());
 			
-			if (rows < MinRows) {
+			if (rows < MinRows || cols > MaxRows) {
 				displayError("Invalid number of <b>Rows</b>.");
 				return false;
-			} else if (cols < MinColumns) {
+			} else if (cols < MinColumns || cols > MaxColumns) {
 				displayError("Invalid number of <b>Columns</b>.");
 				return false;
 			} else if (rows * cols > MaxGridArea) {
@@ -197,51 +199,70 @@
 				var cellCount = 0;
 				var gridNumber = 0;
 				
-				$("#divGrid").html("");
+				cellCount = 0;
+				if (step == 2) $("#divGrid").html("");
 				
 				var tbl = $(document.createElement("table")).appendTo("#divGrid");
 				tbl.prop("id", "tblGrid");
 				tbl.prop("class", "grid");
 				
 				for (var r = 0; r < rows; r++) {
-					var tr = $(document.createElement("tr")).appendTo(tbl);
-					tr.prop("id", "Row_" + r);
+					var tr;
+					var trId = "Row_" + r;
+					
+					if (step == 2) {
+						tr = $(document.createElement("tr")).appendTo(tbl);
+						tr.prop("id", trId);
+					} else if (step == 3) {
+						tr = $("#" + trId);
+					}
+					
 					for (var c = 0; c < cols; c++) {
-						cellCount++;
-						var td = $(document.createElement("td")).appendTo(tr);
-						td.prop("id", "Cell_" + r + "_" + c);
-						td.prop("class", "cell");
+						var td, chk;
+						var tdId = "Cell_" + r + "_" + c;
+						var chkId = "Chk_" + r + "_" + c;
+						
 						if (step == 2) {
-							var chk = $(document.createElement("input")).appendTo(td);
-							chk.prop("id", "Chk_" + r + "_" + c);
+							cellCount++;
+							td = $(document.createElement("td")).appendTo(tr);
+							td.prop("id", tdId);
+							td.prop("class", "cell");
+							chk = $(document.createElement("input")).appendTo(td);
+							chk.prop("id", chkId);
 							chk.prop("type", "checkbox");
 							chk.click(function () {
 								cellCheck(this);
 							});
 						} else if (step == 3) {
-							var txt = $(document.createElement("input")).appendTo(td);
-							txt.prop("id", "Text_" + r + "_" + c);
-							txt.prop("type", "text");
-							txt.prop("maxlength", "1");
-							// keyboard events
-							txt.focus(function () {
-								this.select();
-							});
-							txt.keyup(function (e) {
-								console.log(e.which + ' ' + e.key)
-								switch (e.key) {
-									case "Backspace":
-										movePrev(this);
-										break;
-									default:
-										moveNext(this);
-										break;
-									}
-							});
+							td = $("#" + tdId);
+							chk = $("#" + chkId);
+
+							if (!chk.prop("checked")) {
+								var txt = $(document.createElement("input")).appendTo(td);
+								txt.prop("id", "Text_" + r + "_" + c);
+								txt.prop("type", "text");
+								txt.prop("maxlength", "1");
+								// keyboard events
+								txt.focus(function () {
+									this.select();
+								});
+								txt.keyup(function (e) {
+									console.log(e.which + ' ' + e.key)
+									switch (e.key) {
+										case "Backspace":
+											movePrev(this);
+											break;
+										default:
+											moveNext(this);
+											break;
+										}
+								});
+							}
+							chk.remove();
 						}
 					}
 				}
-				setBackgrounds();
+				if (step == 2) setBackgrounds();
 			} catch (e) {
 				console.warn("Exception raised in buildTable()\n" + e);
 			}
@@ -283,7 +304,6 @@
 					var nextRowChkId = $("#Chk_" + (row + 1) + "_" + cell);	// Checkbox below this row
 
 					if (isChecked(thisChkId)) {
-						//cells[i].style["background-image"] = "none";
 						thisCellId.css("background-image", "none");
 					}
 					else if (row == 0 || cell == 0 ||
