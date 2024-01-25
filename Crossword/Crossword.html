@@ -248,25 +248,24 @@
 								txt.prop("id", "Text_" + r + "_" + c);
 								txt.prop("type", "text");
 								txt.prop("maxlength", "1");
-								// keyboard events
 								txt.focus(function () {
 									this.select();
 								});
 								txt.keyup(function (e) {
 									console.log("Key ".concat(e.which, " pressed (", e.key, ")"));
 									switch (e.key) {
-										case "Backspace":
-										case "ArrowLeft":
-											moveLeft(this);
-											break;
 										case "ArrowUp":
-											moveUp(this);
+											moveVertical(this, "up");
 											break;
 										case "ArrowDown":
-											moveDown(this);
+											moveVertical(this, "down");
+											break;
+										case "Backspace":
+										case "ArrowLeft":
+											moveHorizontal(this, "left");
 											break;
 										default:
-											moveRight(this);
+											moveHorizontal(this);
 											break;
 										}
 								});
@@ -289,67 +288,57 @@
 			return parseInt(id.split("_")[2]);
 		}
 
-		function moveRight(txt) {
+		function moveVertical(txt, dir) {
+			var row = getCurrentRow(txt.id);
+			var col = getCurrentColumn(txt.id)
+
+			if (row != NaN && col != NaN) {
+				var nextRow = row;
+				if (dir == "up") {
+					nextRow = row - 1;
+				} else {
+					nextRow = row + 1;
+				}
+				var nextId = "Text_".concat(nextRow, "_", col);
+				var elem = document.getElementById(nextId);
+				if (elem != null) {
+					elem.select();
+					elem.focus();
+				}
+			}
+		}
+
+		function moveHorizontal(txt, dir) {
 			var rows = rowCount();
 			var cols = columnCount();
 			var row = getCurrentRow(txt.id);
 			var col = getCurrentColumn(txt.id);
 
-			for (var r = row; r < rows; r++) {
-				for (var c = col; c < cols; c++) {
-					var id = "Text_r_c".replace("r", r).replace("c", c);
-					var elem = document.getElementById(id);
-					if (elem != null && elem.id != txt.id) {
-						elem.select();
-						elem.focus();
-						return;
+			if (dir == "left") {
+				for (var r = row; r >= 0; r--) {
+					for (var c = col; c >= 0; c--) {
+						var id = "Text_r_c".replace("r", r).replace("c", c);
+						var elem = document.getElementById(id);
+						if (elem != null && elem.id != txt.id) {
+							elem.select();
+							elem.focus();
+							return;
+						}
 					}
+					col = cols;
 				}
-				col = 0;
-			}
-		}
-
-		function moveLeft(txt) {
-			var cols = columnCount();
-			var row = getCurrentRow(txt.id);
-			var col = getCurrentColumn(txt.id);
-
-			for (var r = row; r >= 0; r--) {
-				for (var c = col; c >= 0; c--) {
-					var id = "Text_r_c".replace("r", r).replace("c", c);
-					var elem = document.getElementById(id);
-					if (elem != null && elem.id != txt.id) {
-						elem.select();
-						elem.focus();
-						return;
+			} else {
+				for (var r = row; r < rows; r++) {
+					for (var c = col; c < cols; c++) {
+						var id = "Text_r_c".replace("r", r).replace("c", c);
+						var elem = document.getElementById(id);
+						if (elem != null && elem.id != txt.id) {
+							elem.select();
+							elem.focus();
+							return;
+						}
 					}
-				}
-				col = cols;
-			}
-		}
-
-		function moveUp(txt) {
-			var arr = txt.id.split("_");
-			if (arr != null && arr.length == 3) {
-				var row = parseInt(arr[1]);
-				var id = new String().concat(arr[0], "_", row - 1, "_", arr[2]);
-				var elem = document.getElementById(id);
-				if (elem != null) {
-					elem.select();
-					elem.focus();
-				}
-			}
-		}
-
-		function moveDown(txt) {
-			var arr = txt.id.split("_");
-			if (arr != null && arr.length == 3) {
-				var row = parseInt(arr[1]);
-				var id = new String().concat(arr[0], "_", row + 1, "_", arr[2]);
-				var elem = document.getElementById(id);
-				if (elem != null) {
-					elem.select();
-					elem.focus();
+					col = 0;
 				}
 			}
 		}
