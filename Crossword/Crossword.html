@@ -128,16 +128,22 @@
 		$(document).ready(function () {
 			// Set cell bg black if checked
 			/*$(".grid").find("input[type='checkbox']").click(function () {
-				console.log("$(this).parent()=" + $(this).parent());
 				$(this).parent().css("background-color", this.checked ? "#000" : "#fff");
 				setBackgrounds();
 			});*/
 
 			nextStep();
 		});
-		
+
+		function rowCount() {
+			return parseInt($("#txtRows").val());
+		}
+
+		function columnCount() {
+			return parseInt($("#txtColumns").val());
+		}
+
 		function nextStep(step) {
-			//console.log("step=" + step);
 			if (!validateInput()) {
 				return false;
 			}
@@ -171,8 +177,8 @@
 		}
 		
 		function validateInput() {
-			var rows = parseInt($("#txtRows").val());
-			var cols = parseInt($("#txtColumns").val());
+			var rows = rowCount();
+			var cols = columnCount();
 			
 			if (rows < MinRows || cols > MaxRows) {
 				displayError("Invalid number of <b>Rows</b>.");
@@ -194,8 +200,8 @@
 		
 		function buildTable(step) {
 			try {
-				var rows = parseInt($("#txtRows").val());
-				var cols = parseInt($("#txtColumns").val());
+				var rows = rowCount();
+				var cols = columnCount();
 				var cellCount = 0;
 				var gridNumber = 0;
 				
@@ -247,13 +253,20 @@
 									this.select();
 								});
 								txt.keyup(function (e) {
-									console.log(e.which + ' ' + e.key)
+									console.log("Key ".concat(e.which, " pressed (", e.key, ")"));
 									switch (e.key) {
 										case "Backspace":
-											movePrev(this);
+										case "ArrowLeft":
+											moveLeft(this);
+											break;
+										case "ArrowUp":
+											moveUp(this);
+											break;
+										case "ArrowDown":
+											moveDown(this);
 											break;
 										default:
-											moveNext(this);
+											moveRight(this);
 											break;
 										}
 								});
@@ -267,19 +280,80 @@
 				console.warn("Exception raised in buildTable()\n" + e);
 			}
 		}
-		
-		function moveNext(txt) {
-			var next = txt.parentElement.nextSibling.firstElementChild;
-			next.select();
-			next.focus();
+
+		function getCurrentRow(id) {
+			return parseInt(id.split("_")[1]);
 		}
-		
-		function movePrev(txt) {
-			var prev = txt.parentElement.previousElementSibling.firstElementChild;
-			prev.select();
-			prev.focus();
+
+		function getCurrentColumn(id) {
+			return parseInt(id.split("_")[2]);
 		}
-		
+
+		function moveRight(txt) {
+			var rows = rowCount();
+			var cols = columnCount();
+			var row = getCurrentRow(txt.id);
+			var col = getCurrentColumn(txt.id);
+
+			for (var r = row; r < rows; r++) {
+				for (var c = col; c < cols; c++) {
+					var id = "Text_r_c".replace("r", r).replace("c", c);
+					var elem = document.getElementById(id);
+					if (elem != null && elem.id != txt.id) {
+						elem.select();
+						elem.focus();
+						return;
+					}
+				}
+				col = 0;
+			}
+		}
+
+		function moveLeft(txt) {
+			var cols = columnCount();
+			var row = getCurrentRow(txt.id);
+			var col = getCurrentColumn(txt.id);
+
+			for (var r = row; r >= 0; r--) {
+				for (var c = col; c >= 0; c--) {
+					var id = "Text_r_c".replace("r", r).replace("c", c);
+					var elem = document.getElementById(id);
+					if (elem != null && elem.id != txt.id) {
+						elem.select();
+						elem.focus();
+						return;
+					}
+				}
+				col = cols;
+			}
+		}
+
+		function moveUp(txt) {
+			var arr = txt.id.split("_");
+			if (arr != null && arr.length == 3) {
+				var row = parseInt(arr[1]);
+				var id = new String().concat(arr[0], "_", row - 1, "_", arr[2]);
+				var elem = document.getElementById(id);
+				if (elem != null) {
+					elem.select();
+					elem.focus();
+				}
+			}
+		}
+
+		function moveDown(txt) {
+			var arr = txt.id.split("_");
+			if (arr != null && arr.length == 3) {
+				var row = parseInt(arr[1]);
+				var id = new String().concat(arr[0], "_", row + 1, "_", arr[2]);
+				var elem = document.getElementById(id);
+				if (elem != null) {
+					elem.select();
+					elem.focus();
+				}
+			}
+		}
+
 		function cellCheck(chk) {
 			$(chk).parent("td").css("background-color", chk.checked ? "#000" : "#fff");
 			setBackgrounds();
