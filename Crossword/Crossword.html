@@ -121,10 +121,29 @@
 				-webkit-transform: translate(2px, 2px);
 				transform: translate(2px, 2px)
 			}
+
+		.white {
+			background-color: white;
+		}
+
+		.black {
+			background-color: black;
+		}
+
+		.yellow {
+			background-color: yellow;
+		}
+
+		.error {
+			color: Crimson;
+			font-weight: 600;
+			font-size: 10pt;
+		}
 	</style>
 
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 	<script type="text/javascript">
+		// Constants
 		const SvgNumber = 'url("data:image/svg+xml,<%3Fxml%20version=\\"1.0\\"%20encoding=\\"utf-8\\"%3F><!DOCTYPE%20svg%20PUBLIC%20\\"-//W3C//DTD%20SVG%201.1//EN\\"%20\\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\\"><svg%20version=\\"1.1\\"%20xmlns=\\"http://www.w3.org/2000/svg\\"%20xmlns:xlink=\\"http://www.w3.org/1999/xlink\\"%20xmlns:xml=\\"http://www.w3.org/XML/1998/namespace\\"%20width=\\"30\\"%20height=\\"30\\"><g><text%20x=\\"1px\\"%20y=\\"7px\\"%20font-family=\\"Arial\\"%20font-size=\\"8px\\"%20font=\\"Arial\\"%20style=\\"fill:gray;\\">{0}</text></g></svg>")';
 		const MaxGridArea = 2500;
 		const MinRows = 5;
@@ -132,8 +151,12 @@
 		const MaxRows = 25;
 		const MaxColumns = 25;
 
-		var currentDirection = "horizontal";
-
+		// Variables
+		var currentRow = 0;
+		var currentColumn = 0;
+		var currentDirection = "vertical";
+		
+		// Events
 		$(document).ready(function () {
 			// Set cell bg black if checked
 			/*$(".grid").find("input[type='checkbox']").click(function () {
@@ -144,6 +167,8 @@
 			nextStep();
 		});
 
+
+		// Common functions
 		function rowCount() {
 			return parseInt($("#txtRows").val());
 		}
@@ -152,6 +177,57 @@
 			return parseInt($("#txtColumns").val());
 		}
 
+		function getRow(id) {
+			try {
+				return parseInt(id.split("_")[1]);
+			} catch (e) {
+				console.warn("Exception raised in getRow()\n" + e);
+				return -1;
+			}
+		}
+
+		function getColumn(id) {
+			try {
+				return parseInt(id.split("_")[2]);
+			} catch (e) {
+				console.warn("Exception raised in getColumn()\n" + e);
+				return -1;
+			}
+		}
+
+		function toggleDirection(row, col) {
+			if (row == currentRow && col == currentColumn)
+				currentDirection = currentDirection == "horizontal" ? "vertical" : "horizontal";
+			currentRow = row;
+			currentColumn = col;
+		}
+
+
+		// Validation
+		function validateInput() {
+			var rows = rowCount();
+			var cols = columnCount();
+
+			if (rows < MinRows || cols > MaxRows) {
+				displayError("Invalid number of <b>Rows</b>.");
+				return false;
+			} else if (cols < MinColumns || cols > MaxColumns) {
+				displayError("Invalid number of <b>Columns</b>.");
+				return false;
+			} else if (rows * cols > MaxGridArea) {
+				displayError("Grid area cannot exceed " + MaxGridArea + ".");
+				return false;
+			}
+			return true;
+		}
+
+		function displayError(msg) {
+			$("#divError").removeClass("hidden");
+			$("#spnError").html(msg);
+		}
+
+
+		// Page logic
 		function nextStep(step) {
 			if (!validateInput()) {
 				return false;
@@ -160,10 +236,15 @@
 			
 			switch (step) {
 				case 1:
+					currentRow = 0;
+					currentColumn = 0;
+					currentDirection = "vertical";
 					$("#divStep1").removeClass("hidden");
 					$("#divStep2").addClass("hidden");
 					$("#divStep3").addClass("hidden");
 					$("#divGrid").addClass("hidden");
+					$("[class*=black]").removeClass("black");
+					$("[class*=white]").removeClass("white")
 					break;
 				case 2:
 					$("#divStep1").addClass("hidden");
@@ -183,28 +264,6 @@
 					nextStep(1);
 					break;
 			}
-		}
-		
-		function validateInput() {
-			var rows = rowCount();
-			var cols = columnCount();
-			
-			if (rows < MinRows || cols > MaxRows) {
-				displayError("Invalid number of <b>Rows</b>.");
-				return false;
-			} else if (cols < MinColumns || cols > MaxColumns) {
-				displayError("Invalid number of <b>Columns</b>.");
-				return false;
-			} else if (rows * cols > MaxGridArea) {
-				displayError("Grid area cannot exceed " + MaxGridArea + ".");
-				return false;
-			}	
-			return true;
-		}
-
-		function displayError(msg) {
-			$("#divError").removeClass("hidden");
-			$("#spnError").html(msg);
 		}
 		
 		function buildTable(step) {
@@ -237,7 +296,7 @@
 						if (step == 2) {
 							td = $(document.createElement("td")).appendTo(tr);
 							td.prop("id", tdId);
-							td.prop("class", "cell");
+							td.prop("class", "cell row" + r + " cell" + c);
 							chk = $(document.createElement("input")).appendTo(td);
 							chk.prop("id", chkId);
 							chk.prop("type", "checkbox");
@@ -258,9 +317,9 @@
 								txt.focus(function () {
 									this.select();
 								});
-								txt.contextmenu(function (e) {
-									if (e.which == 3) toggleDirection();
-								});
+								//txt.contextmenu(function (e) {
+								//	if (e.which == 3) toggleDirection();
+								//});
 								//txt.bind("paste", function (e) {
 								//	var s = e.originalEvent.clipboardData.getData("Text");
 								//	console.log("Pasted: " + s);
@@ -268,6 +327,9 @@
 								//});
 								txt.keydown(function (e) {
 									moveNext(e, this);
+								});
+								txt.click(function (e) {
+									highlightAnswer(this);
 								});
 							}
 							chk.remove();
@@ -280,31 +342,65 @@
 			}
 		}
 
-		function toggleDirection() {
-			currentDirection = currentDirection == "horizonal" ? "vertical" : "horizonal";
-			console.log(currentDirection)
-			//var row = getCurrentRow(txt.id);
-			//var col = getCurrentColumn(txt.id);
+		function cellCheck(chk) {
+			//$(chk).parent("td").addClass(chk.checked ? "black" : "white");
+			if (chk.checked)
+				$(chk).parent("td").addClass("black").removeClass("white");
+			else
+				$(chk).parent("td").addClass("white").removeClass("black");
 
-			//if (currentDirection == "horizonal") {
-			//	currentDirection == "vertical";
-
-			//} else {
-			//	currentDirection == "horizonal";
-				
-			//	for (var c = col; c >= 0; c++) {
-			//		var id = "#Cell_".concat(r, "_", c);
-			//		//if ()
-			//	}
-			//}
+			setBackgrounds();
 		}
 
-		function getCurrentRow(id) {
-			return parseInt(id.split("_")[1]);
-		}
+		function highlightAnswer(txt) {
+			// Clear the bg color class
+			$("#tblGrid").find("td").removeClass("yellow");
 
-		function getCurrentColumn(id) {
-			return parseInt(id.split("_")[2]);
+			var row = getRow(txt.id);
+			var col = getColumn(txt.id);
+			var cells, start, end;
+
+			toggleDirection(row, col);
+
+			if (currentDirection == "horizontal") {
+				start = 0;
+				end = MaxColumns;
+				cells = $("#Row_" + row).find(".black");
+
+				// Find first blank cell before and after this
+				for (var i = 0; i < cells.length; i++) {
+					var id = getColumn(cells[i].id);
+					if (id <= col) {
+						start = id + 1;
+					} else {
+						end = id;
+						break;
+					}
+				}
+				// Now set the bg color
+				for (var i = start; i < end; i++) {
+					$("#Cell_"+ row + "_" + i).addClass("yellow");
+				}
+			} else {;
+				start = 0;
+				end = MaxRows;
+				var cells = $("#tblGrid").find(".black.cell" + col);
+
+				// Find first blank cell above and below
+				for (var i = 0; i < cells.length; i++) {
+					var id = getRow(cells[i].id);
+					if (id <= row) {
+						start = id + 1;
+					} else {
+						end = id;
+						break;
+					}
+				}
+				// Now set the bg color
+				for (var i = start; i < end; i++) {
+					$("#Cell_" + i + "_" + col).addClass("yellow");
+				}
+			}
 		}
 
 		function moveNext(e, txt) {
@@ -340,7 +436,10 @@
 					break;
 				default:
 					if (e.which >= 65 && e.which <= 122) { // a-Z
-						moveHorizontal(txt);
+						if (currentDirection == "horizontal")
+							moveHorizontal(txt, "left");
+						else
+							moveVertical(txt, "up");
 					} else {
 						txt.value = "";
 						e.preventDefault();
@@ -351,8 +450,8 @@
 		}
 
 		function moveVertical(txt, dir) {
-			var row = getCurrentRow(txt.id);
-			var col = getCurrentColumn(txt.id);
+			var row = getRow(txt.id);
+			var col = getColumn(txt.id);
 
 			if (row != NaN && col != NaN) {
 				var nextRow = row;
@@ -361,9 +460,10 @@
 				} else {
 					nextRow = row + 1;
 				}
-				var nextId = "Text_".concat(nextRow, "_", col);
-				var elem = document.getElementById(nextId);
-				if (elem != null) {
+				//var nextId = "Text_".concat(nextRow, "_", col);
+				//var elem = document.getElementById(nextId);
+				var elem = $("#Text_" + nextRow + "_" + col);
+				if (elem.length) {
 					elem.select();
 					elem.focus();
 				}
@@ -373,8 +473,8 @@
 		function moveHorizontal(txt, dir) {
 			var rows = rowCount();
 			var cols = columnCount();
-			var row = getCurrentRow(txt.id);
-			var col = getCurrentColumn(txt.id);
+			var row = getRow(txt.id);
+			var col = getColumn(txt.id);
 
 			if (dir == "left") {
 				for (var r = row; r >= 0; r--) {
@@ -403,11 +503,6 @@
 					col = 0;
 				}
 			}
-		}
-
-		function cellCheck(chk) {
-			$(chk).parent("td").css("background-color", chk.checked ? "#000" : "#fff");
-			setBackgrounds();
 		}
 		
 		function setBackgrounds() {
@@ -462,10 +557,10 @@
 		<fieldset id="fsDimensions">
 			<legend>Choose Dimensions</legend>
 			
-			<table>
-				<colgroup>
-					<col style="width: 100px" />
-					<col />
+			<table id="tblDimensions">
+				<colgroup id="cgDimensions">
+					<col class="colDimensions1" style="width: 100px" />
+					<col class="colDimensions2" />
 				</colgroup>
 				<tr>
 					<td>Rows:</td>
@@ -511,7 +606,7 @@
 
 	<!-- Error -->
 	<div id="divError" class="hidden" style="width: 100%">
-		<span id="spnError" style="color: Crimson"></span>
+		<span id="spnError" class="error"></span>
 	</div>
 </body>
 </html>
