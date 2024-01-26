@@ -26,9 +26,8 @@
 			padding: 5px;
 		}
 
-			fieldset td input[type=text] {
-				/*max-length: 3;*/
-				width: 20px;
+			fieldset td input[type=number] {
+				width: 35px;
 			}
 
 		.hidden {
@@ -39,8 +38,10 @@
 			display: block;
 		}
 
-		.grid {
+		.grid table {
 			/*display: inline-block;*/
+			border: 0;
+			border-spacing: 0;
 		}
 
 			.grid td {
@@ -56,9 +57,13 @@
 			}
 
 			.grid input[type=text] {
-				height: 18px;
-				width: 18px;
+				height: 32px;
+				width: 32px;
 				border: 0;
+				padding: 0;
+				margin: 0;
+				color: black;
+				background-color: transparent;
 				font-size: 18px;
 				font-weight: 600;
 				text-transform: uppercase;
@@ -67,9 +72,11 @@
 			}
 
 			.grid input[type=checkbox] {
-				height: 22px;
-				width: 22px;
+				height: 30px;
+				width: 30px;
 				border: 0;
+				padding: 0;
+				margin: 0;
 				font-size: 8px;
 				text-align: center;
 				vertical-align: middle;
@@ -79,7 +86,7 @@
 			}
 
 			.grid td:has(input[type=checkbox]):hover {
-				background-color: gainsboro;
+				background-color: rgb(0, 0, 0, 0.85);
 			}
 
 		.buttons {
@@ -122,9 +129,11 @@
 		const MaxGridArea = 2500;
 		const MinRows = 5;
 		const MinColumns = 5;
-		const MaxRows = 50;
-		const MaxColumns = 50;
-		
+		const MaxRows = 25;
+		const MaxColumns = 25;
+
+		var currentDirection = "horizontal";
+
 		$(document).ready(function () {
 			// Set cell bg black if checked
 			/*$(".grid").find("input[type='checkbox']").click(function () {
@@ -202,10 +211,7 @@
 			try {
 				var rows = rowCount();
 				var cols = columnCount();
-				var cellCount = 0;
-				var gridNumber = 0;
-				
-				cellCount = 0;
+
 				if (step == 2) $("#divGrid").html("");
 				
 				var tbl = $(document.createElement("table")).appendTo("#divGrid");
@@ -229,7 +235,6 @@
 						var chkId = "Chk_" + r + "_" + c;
 						
 						if (step == 2) {
-							cellCount++;
 							td = $(document.createElement("td")).appendTo(tr);
 							td.prop("id", tdId);
 							td.prop("class", "cell");
@@ -248,26 +253,21 @@
 								txt.prop("id", "Text_" + r + "_" + c);
 								txt.prop("type", "text");
 								txt.prop("maxlength", "1");
+								//txt.prop("pattern", "[a-zA-Z]*");
+								//txt.prop("oninvalid", "setCustomValidity(char is invalid')")
 								txt.focus(function () {
 									this.select();
 								});
-								txt.keyup(function (e) {
-									console.log("Key ".concat(e.which, " pressed (", e.key, ")"));
-									switch (e.key) {
-										case "ArrowUp":
-											moveVertical(this, "up");
-											break;
-										case "ArrowDown":
-											moveVertical(this, "down");
-											break;
-										case "Backspace":
-										case "ArrowLeft":
-											moveHorizontal(this, "left");
-											break;
-										default:
-											moveHorizontal(this);
-											break;
-										}
+								txt.contextmenu(function (e) {
+									if (e.which == 3) toggleDirection();
+								});
+								//txt.bind("paste", function (e) {
+								//	var s = e.originalEvent.clipboardData.getData("Text");
+								//	console.log("Pasted: " + s);
+								//	moveNext(e, this);
+								//});
+								txt.keydown(function (e) {
+									moveNext(e, this);
 								});
 							}
 							chk.remove();
@@ -280,6 +280,25 @@
 			}
 		}
 
+		function toggleDirection() {
+			currentDirection = currentDirection == "horizonal" ? "vertical" : "horizonal";
+			console.log(currentDirection)
+			//var row = getCurrentRow(txt.id);
+			//var col = getCurrentColumn(txt.id);
+
+			//if (currentDirection == "horizonal") {
+			//	currentDirection == "vertical";
+
+			//} else {
+			//	currentDirection == "horizonal";
+				
+			//	for (var c = col; c >= 0; c++) {
+			//		var id = "#Cell_".concat(r, "_", c);
+			//		//if ()
+			//	}
+			//}
+		}
+
 		function getCurrentRow(id) {
 			return parseInt(id.split("_")[1]);
 		}
@@ -288,9 +307,52 @@
 			return parseInt(id.split("_")[2]);
 		}
 
+		function moveNext(e, txt) {
+			console.log(e.which + " (" + e.key + ") pressed");
+			switch (e.which) {
+				case 8:  // "Backspace"
+					txt.value = "";
+					if (currentDirection == "horizontal")
+						moveHorizontal(txt, "left");
+					else
+						moveVertical(txt, "up");
+					break;
+				//case 9:  // "Tab"
+
+				//case 32:  // " "
+				//	txt.value = "";
+				//	e.preventDefault();
+				//	break;
+				case 37:  // "ArrowLeft"
+					moveHorizontal(txt, "left");
+					break;
+				case 38:  // "ArrowUp"
+					moveVertical(txt, "up");
+					break;
+				case 39:  // "ArrowRight"
+					moveHorizontal(txt, "right");
+					break;
+				case 40:  // "ArrowDown"
+					moveVertical(txt, "down");
+					break;
+				case 91:  // "Meta" (Win)
+					e.preventDefault();
+					break;
+				default:
+					if (e.which >= 65 && e.which <= 122) { // a-Z
+						moveHorizontal(txt);
+					} else {
+						txt.value = "";
+						e.preventDefault();
+					}
+					//moveHorizontal(txt);
+					break;
+			}
+		}
+
 		function moveVertical(txt, dir) {
 			var row = getCurrentRow(txt.id);
-			var col = getCurrentColumn(txt.id)
+			var col = getCurrentColumn(txt.id);
 
 			if (row != NaN && col != NaN) {
 				var nextRow = row;
@@ -399,6 +461,7 @@
 	<div id="divStep1" class="hidden" style="padding-bottom: 20px;">
 		<fieldset id="fsDimensions">
 			<legend>Choose Dimensions</legend>
+			
 			<table>
 				<colgroup>
 					<col style="width: 100px" />
@@ -407,13 +470,13 @@
 				<tr>
 					<td>Rows:</td>
 					<td>
-						<input type="text" id="txtRows" runat="server" maxlength="3" value="15" />
+						<input type="number" id="txtRows" runat="server" min="5" max="25" value="15" />
 					</td>
 				</tr>
 				<tr>
 					<td>Columns:</td>
 					<td>
-						<input type="text" id="txtColumns" runat="server" maxlength="3" value="15" />
+						<input type="number" id="txtColumns" runat="server" min="5" max="25" value="15" />
 					</td>
 				</tr>
 			</table>
