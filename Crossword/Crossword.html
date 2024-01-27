@@ -152,9 +152,7 @@
 		const MaxColumns = 25;
 
 		// Variables
-		var currentRow = 0;
-		var currentColumn = 0;
-		var currentDirection = "vertical";
+		var currentRow, currentColumn, currentDirection;
 		
 		// Events
 		$(document).ready(function () {
@@ -169,6 +167,10 @@
 
 
 		// Common functions
+		function buildId(prefix, row, column) {
+			return prefix.concat("_", row, "_", column);
+		}
+
 		function rowCount() {
 			return parseInt($("#txtRows").val());
 		}
@@ -195,11 +197,16 @@
 			}
 		}
 
+		function setCurrentPos(row, col) {
+			currentRow = row;
+			currentColumn = col;
+			console.log("currentRow:" + row + ", currentColumn" + col)
+		}
+
 		function toggleDirection(row, col) {
 			if (row == currentRow && col == currentColumn)
 				currentDirection = currentDirection == "horizontal" ? "vertical" : "horizontal";
-			currentRow = row;
-			currentColumn = col;
+			setCurrentPos(row, col);
 		}
 
 
@@ -236,9 +243,9 @@
 			
 			switch (step) {
 				case 1:
-					currentRow = 0;
-					currentColumn = 0;
-					currentDirection = "vertical";
+					currentRow = -1;
+					currentColumn = -1;
+					currentDirection = "horizontal";
 					$("#divStep1").removeClass("hidden");
 					$("#divStep2").addClass("hidden");
 					$("#divStep3").addClass("hidden");
@@ -290,8 +297,8 @@
 					
 					for (var c = 0; c < cols; c++) {
 						var td, chk;
-						var tdId = "Cell_" + r + "_" + c;
-						var chkId = "Chk_" + r + "_" + c;
+						var tdId = buildId("Cell", r, c);
+						var chkId = buildId("Chk", r, c);
 						
 						if (step == 2) {
 							td = $(document.createElement("td")).appendTo(tr);
@@ -309,13 +316,17 @@
 
 							if (!chk.prop("checked")) {
 								var txt = $(document.createElement("input")).appendTo(td);
-								txt.prop("id", "Text_" + r + "_" + c);
+								txt.prop("id", buildId("Text", r, c));
 								txt.prop("type", "text");
 								txt.prop("maxlength", "1");
 								//txt.prop("pattern", "[a-zA-Z]*");
 								//txt.prop("oninvalid", "setCustomValidity(char is invalid')")
 								txt.focus(function () {
 									this.select();
+								});
+								txt.click(function (e) {
+									console.log("click " + e.which + " (" + e.key + ")");
+									highlightAnswer(this);
 								});
 								//txt.contextmenu(function (e) {
 								//	if (e.which == 3) toggleDirection();
@@ -325,11 +336,18 @@
 								//	console.log("Pasted: " + s);
 								//	moveNext(e, this);
 								//});
-								txt.keydown(function (e) {
+
+								// Keyboard events happen in this order: keydown, keypress, keyup
+								//txt.keydown(function (e) {
+								//	console.log("keydown " + e.which + " (" + e.key + ")");
+								//});
+								//txt.keypress(function (e) {
+								//	console.log("keypress " + e.which + " (" + e.key + ")");
+								//});
+								txt.keyup(function (e) {
+									console.log("keyup " + e.which + " (" + e.key + ")");
 									moveNext(e, this);
-								});
-								txt.click(function (e) {
-									highlightAnswer(this);
+									//moveHorizontal(this);
 								});
 							}
 							chk.remove();
@@ -343,7 +361,6 @@
 		}
 
 		function cellCheck(chk) {
-			//$(chk).parent("td").addClass(chk.checked ? "black" : "white");
 			if (chk.checked)
 				$(chk).parent("td").addClass("black").removeClass("white");
 			else
@@ -379,9 +396,9 @@
 				}
 				// Now set the bg color
 				for (var i = start; i < end; i++) {
-					$("#Cell_"+ row + "_" + i).addClass("yellow");
+					$(buildId("#Cell", row, i)).addClass("yellow");
 				}
-			} else {;
+			} else {
 				start = 0;
 				end = MaxRows;
 				var cells = $("#tblGrid").find(".black.cell" + col);
@@ -398,13 +415,18 @@
 				}
 				// Now set the bg color
 				for (var i = start; i < end; i++) {
-					$("#Cell_" + i + "_" + col).addClass("yellow");
+					$(buildId("#Cell", i, col)).addClass("yellow");
 				}
 			}
 		}
 
 		function moveNext(e, txt) {
+			var row = getRow(txt.id);
+			var col = getColumn(txt.id);
+			setCurrentPos(row, col);
+
 			console.log(e.which + " (" + e.key + ") pressed");
+
 			switch (e.which) {
 				case 8:  // "Backspace"
 					txt.value = "";
@@ -413,39 +435,74 @@
 					else
 						moveVertical(txt, "up");
 					break;
-				//case 9:  // "Tab"
-
+				case 9:  // "Tab"
+					moveNextAnswer(txt);
+					break;
 				//case 32:  // " "
 				//	txt.value = "";
 				//	e.preventDefault();
 				//	break;
 				case 37:  // "ArrowLeft"
+					if (currentDirection == "vertical")
+						highlightAnswer(txt);
 					moveHorizontal(txt, "left");
 					break;
 				case 38:  // "ArrowUp"
-					moveVertical(txt, "up");
+					if (currentDirection == "horizontal")
+						highlightAnswer(txt);
+					else
+						moveVertical(txt, "up");
 					break;
 				case 39:  // "ArrowRight"
-					moveHorizontal(txt, "right");
+					if (currentDirection == "vertical")
+						highlightAnswer(txt);
+					else
+						moveHorizontal(txt, "right");
 					break;
 				case 40:  // "ArrowDown"
-					moveVertical(txt, "down");
+					if (currentDirection == "horizontal")
+						highlightAnswer(txt);
+					else
+						moveVertical(txt, "down");
 					break;
 				case 91:  // "Meta" (Win)
 					e.preventDefault();
 					break;
 				default:
-					if (e.which >= 65 && e.which <= 122) { // a-Z
+					//if (e.which >= 65 && e.which <= 122) { // a-Z
 						if (currentDirection == "horizontal")
-							moveHorizontal(txt, "left");
+							moveHorizontal(txt, "right");
 						else
-							moveVertical(txt, "up");
-					} else {
-						txt.value = "";
-						e.preventDefault();
-					}
+							moveVertical(txt, "down");
+					//} else {
+					//	txt.value = "";
+					//	e.preventDefault();
+					//}
 					//moveHorizontal(txt);
 					break;
+			}
+			setCurrentPos(row, col);
+		}
+
+		function moveNextAnswer(txt) {
+			//e.preventDefault();
+			var row = getRow(txt.id);
+			var col = getColumn(txt.id);
+
+			if (currentDirection == "horizontal") {
+				for (var c = col; c < MaxColumns; c++) {
+					var id1 = buildId("#Cell", row, c);
+					var id2 = buildId("#Cell", row, c + 1)
+
+					if ($(id1).hasClass("black") && !$(id2).hasClass("black")) {
+						var nextTxt = $(id2.replace("Cell", "Text"));
+						//nextTxt.click(e);
+						highlightAnswer(nextTxt);
+						break;
+					}
+				}
+			} else {
+
 			}
 		}
 
@@ -454,15 +511,8 @@
 			var col = getColumn(txt.id);
 
 			if (row != NaN && col != NaN) {
-				var nextRow = row;
-				if (dir == "up") {
-					nextRow = row - 1;
-				} else {
-					nextRow = row + 1;
-				}
-				//var nextId = "Text_".concat(nextRow, "_", col);
-				//var elem = document.getElementById(nextId);
-				var elem = $("#Text_" + nextRow + "_" + col);
+				var nextRow = dir == "up" ? row - 1 : row + 1;
+				var elem = $(buildId("#Text", nextRow, col));
 				if (elem.length) {
 					elem.select();
 					elem.focus();
@@ -479,7 +529,7 @@
 			if (dir == "left") {
 				for (var r = row; r >= 0; r--) {
 					for (var c = col; c >= 0; c--) {
-						var id = "Text_r_c".replace("r", r).replace("c", c);
+						var id = buildId("Text", r, c);
 						var elem = document.getElementById(id);
 						if (elem != null && elem.id != txt.id) {
 							elem.select();
@@ -492,7 +542,7 @@
 			} else {
 				for (var r = row; r < rows; r++) {
 					for (var c = col; c < cols; c++) {
-						var id = "Text_r_c".replace("r", r).replace("c", c);
+						var id = buildId("Text", r, c);
 						var elem = document.getElementById(id);
 						if (elem != null && elem.id != txt.id) {
 							elem.select();
@@ -516,25 +566,25 @@
 					var row = parseInt(arr[0]);
 					var cell = parseInt(arr[1]);
 
-					var thisCellId = $("#" + id);							// This table cell
-					var thisChkId = $("#Chk_" + row + "_" + cell);			// The checkbox inside
-					var leftChkId = $("#Chk_" + row + "_" + (cell - 1));	// Checkbox to the left of this
-					var rightChkId = $("#Chk_" + row + "_" + (cell + 1));	// Checkbox to the right of this
-					var prevRowChkId = $("#Chk_" + (row - 1) + "_" + cell);	// Checkbox above this row
-					var nextRowChkId = $("#Chk_" + (row + 1) + "_" + cell);	// Checkbox below this row
+					var thisCell = $("#" + id);							// This table cell
+					var thisChk = $(buildId("#Chk", row, cell));		// The checkbox inside
+					var leftChk = $(buildId("#Chk", row, cell - 1));	// Checkbox to the left of this
+					var rightChk = $(buildId("#Chk", row, cell + 1));	// Checkbox to the right of this
+					var prevRowChk = $(buildId("#Chk", row - 1, cell));	// Checkbox above this row
+					var nextRowChk = $(buildId("#Chk", row + 1, cell));	// Checkbox below this row
 
-					if (isChecked(thisChkId)) {
-						thisCellId.css("background-image", "none");
+					if (isChecked(thisChk)) {
+						thisCell.css("background-image", "none");
 					}
 					else if (row == 0 || cell == 0 ||
-						(isChecked(leftChkId) && !isChecked(rightChkId)) ||
-						(isChecked(prevRowChkId) && !isChecked(nextRowChkId))) {
+						(isChecked(leftChk) && !isChecked(rightChk)) ||
+						(isChecked(prevRowChk) && !isChecked(nextRowChk))) {
 						number++;
 						// Add background SVG as inline style
 						var img = SvgNumber.replace("{0}", number);
-						thisCellId.css("background-image", img);
+						thisCell.css("background-image", img);
 					} else {
-						thisCellId.css("background-image", "none");
+						thisCell.css("background-image", "none");
 					}
 				}
 			} catch (e) {
