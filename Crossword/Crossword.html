@@ -86,7 +86,7 @@
 			}
 
 			.grid td:has(input[type=checkbox]):hover {
-				background-color: rgb(0, 0, 0, 0.85);
+				background-color: gray;
 			}
 
 		.buttons {
@@ -138,6 +138,10 @@
 			color: Crimson;
 			font-weight: 600;
 			font-size: 10pt;
+		}
+
+		.across-start {
+			border: 1px solid blue !important;
 		}
 	</style>
 
@@ -207,8 +211,36 @@
 			if (row == currentRow && col == currentColumn)
 				currentDirection = currentDirection == "horizontal" ? "vertical" : "horizontal";
 			setCurrentPos(row, col);
+
+			$("td[tabindex]").prop("tabindex", -1);
+
+			if (currentDirection == "horizontal") {
+				var acrossStart = $("[class~=across-start]");
+				for (var i = 0; i < acrossStart.length; i++) {
+					$("#" + acrossStart[i].id).prop("tabindex", i);
+				}
+			}
+			//var i = 0;
+			//if (currentDirection == "horizontal") {
+			//	for (var r = 0; r < rowCount; r++) {
+			//		for (var c = 0; c < columnCount; c++) {
+			//			var cell1 = buildId("#Cell", r, c);
+			//			var cell2 = buildId("#Cell", r, c + 1);
+			//			if ($(cell1).css("background-color") != "none") {
+							
+			//				$(cell).prop("tabindex", i);
+			//				i++;
+			//			} else {
+			//				$(cell).prop("tabindex", -1);
+			//			}
+			//		}
+			//	}
+			//}
 		}
 
+		function isChecked(chk) {
+			return chk.prop("id") != undefined && chk.prop("checked");
+		}
 
 		// Validation
 		function validateInput() {
@@ -251,7 +283,7 @@
 					$("#divStep3").addClass("hidden");
 					$("#divGrid").addClass("hidden");
 					$("[class*=black]").removeClass("black");
-					$("[class*=white]").removeClass("white")
+					//$("[class*=white]").removeClass("white")
 					break;
 				case 2:
 					$("#divStep1").addClass("hidden");
@@ -319,13 +351,13 @@
 								txt.prop("id", buildId("Text", r, c));
 								txt.prop("type", "text");
 								txt.prop("maxlength", "1");
+								//txt.prop("tabindex", "-1");
 								//txt.prop("pattern", "[a-zA-Z]*");
 								//txt.prop("oninvalid", "setCustomValidity(char is invalid')")
 								txt.focus(function () {
 									this.select();
 								});
 								txt.click(function (e) {
-									console.log("click " + e.which + " (" + e.key + ")");
 									highlightAnswer(this);
 								});
 								//txt.contextmenu(function (e) {
@@ -362,9 +394,9 @@
 
 		function cellCheck(chk) {
 			if (chk.checked)
-				$(chk).parent("td").addClass("black").removeClass("white");
+				$(chk).parent("td").addClass("black"); //.removeClass("white");
 			else
-				$(chk).parent("td").addClass("white").removeClass("black");
+				$(chk).parent("td").removeClass("black"); //.addClass("white")
 
 			setBackgrounds();
 		}
@@ -373,18 +405,23 @@
 			// Clear the bg color class
 			$("#tblGrid").find("td").removeClass("yellow");
 
-			var row = getRow(txt.id);
-			var col = getColumn(txt.id);
+			var row = getRow(txt instanceof jQuery ? txt.prop("id") : txt.id);
+			var col = getColumn(txt instanceof jQuery ? txt.prop("id") : txt.id);
 			var cells, start, end;
 
 			toggleDirection(row, col);
 
 			if (currentDirection == "horizontal") {
 				start = 0;
-				end = MaxColumns;
+				end = columnCount();
 				cells = $("#Row_" + row).find(".black");
 
 				// Find first blank cell before and after this
+				//var acrossStart = $("[class~=across-start]");
+				//for (var i = 0; i < acrossStart.length; i++) {
+
+				//}
+
 				for (var i = 0; i < cells.length; i++) {
 					var id = getColumn(cells[i].id);
 					if (id <= col) {
@@ -400,7 +437,7 @@
 				}
 			} else {
 				start = 0;
-				end = MaxRows;
+				end = rowCount();
 				var cells = $("#tblGrid").find(".black.cell" + col);
 
 				// Find first blank cell above and below
@@ -418,6 +455,9 @@
 					$(buildId("#Cell", i, col)).addClass("yellow");
 				}
 			}
+
+			txt.select();
+			txt.focus();
 		}
 
 		function moveNext(e, txt) {
@@ -436,6 +476,7 @@
 						moveVertical(txt, "up");
 					break;
 				case 9:  // "Tab"
+					e.preventDefault();
 					moveNextAnswer(txt);
 					break;
 				//case 32:  // " "
@@ -485,21 +526,35 @@
 		}
 
 		function moveNextAnswer(txt) {
-			//e.preventDefault();
 			var row = getRow(txt.id);
 			var col = getColumn(txt.id);
 
 			if (currentDirection == "horizontal") {
-				for (var c = col; c < MaxColumns; c++) {
-					var id1 = buildId("#Cell", row, c);
-					var id2 = buildId("#Cell", row, c + 1)
+				for (var r = row; r < rowCount(); r++) {
+					console.log("r=" + r)
+					for (var c = col; c < columnCount() - 1; c++) {
+						console.log("c=" + c)
+						var id1 = buildId("#Cell", r, c);
+						var cell1 = $(id1);
+						if (!cell1.length) break;
+						if (r > row && c == 0 && !cell1.hasClass("black")) {
+							// First cell of next row is not blank
+							highlightAnswer($(id1.replace("Cell", "Text")));
+							return;
+						}
 
-					if ($(id1).hasClass("black") && !$(id2).hasClass("black")) {
-						var nextTxt = $(id2.replace("Cell", "Text"));
-						//nextTxt.click(e);
-						highlightAnswer(nextTxt);
-						break;
+						var id2 = buildId("#Cell", r, c + 1)
+						var cell2 = $(id2);
+						if (!cell2.length) break;
+
+						if (cell1.hasClass("black") && !cell2.hasClass("black")) {
+							var txt2 = $(id2.replace("Cell", "Text"));
+							//nextTxt.click(e);
+							highlightAnswer(txt2);
+							return;
+						}
 					}
+					c = 0;
 				}
 			} else {
 
@@ -583,6 +638,11 @@
 						// Add background SVG as inline style
 						var img = SvgNumber.replace("{0}", number);
 						thisCell.css("background-image", img);
+
+						if (isChecked(leftChk) && !isChecked(rightChk) && !isChecked(nextRowChk))
+							thisCell.addClass("across-start");
+
+						//thisCell.prop("tabindex", number);
 					} else {
 						thisCell.css("background-image", "none");
 					}
@@ -590,10 +650,6 @@
 			} catch (e) {
 				console.warn("Exception raised in setBackgrounds()\n" + e);
 			}
-		}
-		
-		function isChecked(chk) {
-			return chk.prop("id") != undefined && chk.prop("checked");
 		}
 	</script>
 </head>
