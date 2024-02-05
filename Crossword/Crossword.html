@@ -188,7 +188,7 @@
 				return parseInt(id.split("_")[1]);
 			} catch (e) {
 				console.warn("Exception raised in getRow()\n" + e);
-				return -1;
+				return NaN;
 			}
 		}
 
@@ -197,14 +197,21 @@
 				return parseInt(id.split("_")[2]);
 			} catch (e) {
 				console.warn("Exception raised in getColumn()\n" + e);
-				return -1;
+				return NaN;
 			}
 		}
 
 		function setCurrentPos(row, col) {
-			currentRow = row;
-			currentColumn = col;
-			console.log("currentRow:" + row + ", currentColumn" + col)
+			try {
+				currentRow = row;
+				currentColumn = col;
+				//console.log("currentRow:" + row + ", currentColumn" + col);
+				return true;
+			}
+			catch (e) {
+				console.warn("Exception raised in setCurrentPos()\n" + e);
+				return false;
+			}
 		}
 
 		function toggleDirection(row, col) {
@@ -213,11 +220,12 @@
 			setCurrentPos(row, col);
 
 			$("td[tabindex]").prop("tabindex", -1);
+			//$("td[tabindex]").removeAttr("tabindex");
 
 			if (currentDirection == "horizontal") {
 				var acrossStart = $("[class~=across-start]");
 				for (var i = 0; i < acrossStart.length; i++) {
-					$("#" + acrossStart[i].id).prop("tabindex", i);
+					$("#" + acrossStart[i].id).attr("tabindex", i);
 				}
 			}
 			//var i = 0;
@@ -304,7 +312,7 @@
 					break;
 			}
 		}
-		
+
 		function buildTable(step) {
 			try {
 				var rows = rowCount();
@@ -354,15 +362,21 @@
 								//txt.prop("tabindex", "-1");
 								//txt.prop("pattern", "[a-zA-Z]*");
 								//txt.prop("oninvalid", "setCustomValidity(char is invalid')")
+
+								// Mouse events happen in this order: focus, click/contextmenu
 								txt.focus(function () {
+									//console.log("focus");
 									this.select();
 								});
 								txt.click(function (e) {
+									//console.log("click");
 									highlightAnswer(this);
 								});
 								//txt.contextmenu(function (e) {
-								//	if (e.which == 3) toggleDirection();
+								//	//console.log("contextmenu");
+								//	//if (e.which == 3) toggleDirection();
 								//});
+
 								//txt.bind("paste", function (e) {
 								//	var s = e.originalEvent.clipboardData.getData("Text");
 								//	console.log("Pasted: " + s);
@@ -370,16 +384,19 @@
 								//});
 
 								// Keyboard events happen in this order: keydown, keypress, keyup
-								//txt.keydown(function (e) {
-								//	console.log("keydown " + e.which + " (" + e.key + ")");
-								//});
+								txt.keydown(function (e) {
+									console.log("keydown " + e.which + " (" + e.key + ")");
+									//moveNext(e, this);
+									//e.preventDefault();
+								});
 								//txt.keypress(function (e) {
 								//	console.log("keypress " + e.which + " (" + e.key + ")");
+								//	moveNext(e, this);
 								//});
 								txt.keyup(function (e) {
 									console.log("keyup " + e.which + " (" + e.key + ")");
 									moveNext(e, this);
-									//moveHorizontal(this);
+									//e.preventDefault();
 								});
 							}
 							chk.remove();
@@ -394,9 +411,9 @@
 
 		function cellCheck(chk) {
 			if (chk.checked)
-				$(chk).parent("td").addClass("black"); //.removeClass("white");
+				$(chk).parent("td").addClass("black");
 			else
-				$(chk).parent("td").removeClass("black"); //.addClass("white")
+				$(chk).parent("td").removeClass("black");
 
 			setBackgrounds();
 		}
@@ -463,17 +480,17 @@
 		function moveNext(e, txt) {
 			var row = getRow(txt.id);
 			var col = getColumn(txt.id);
-			setCurrentPos(row, col);
+			if (!setCurrentPos(row, col)) return false;
 
-			console.log(e.which + " (" + e.key + ") pressed");
+			//console.log(e.which + " (" + e.key + ") pressed");
 
 			switch (e.which) {
 				case 8:  // "Backspace"
 					txt.value = "";
 					if (currentDirection == "horizontal")
-						moveHorizontal(txt, "left");
+						moveHorizontal(e, txt, "left");
 					else
-						moveVertical(txt, "up");
+						moveVertical(e, txt, "up");
 					break;
 				case 9:  // "Tab"
 					e.preventDefault();
@@ -486,40 +503,40 @@
 				case 37:  // "ArrowLeft"
 					if (currentDirection == "vertical")
 						highlightAnswer(txt);
-					moveHorizontal(txt, "left");
+					moveHorizontal(e, txt, "left");
 					break;
 				case 38:  // "ArrowUp"
 					if (currentDirection == "horizontal")
 						highlightAnswer(txt);
 					else
-						moveVertical(txt, "up");
+						moveVertical(e, txt, "up");
 					break;
 				case 39:  // "ArrowRight"
 					if (currentDirection == "vertical")
 						highlightAnswer(txt);
 					else
-						moveHorizontal(txt, "right");
+						moveHorizontal(e, txt, "right");
 					break;
 				case 40:  // "ArrowDown"
 					if (currentDirection == "horizontal")
 						highlightAnswer(txt);
 					else
-						moveVertical(txt, "down");
+						moveVertical(e, txt, "down");
 					break;
 				case 91:  // "Meta" (Win)
 					e.preventDefault();
 					break;
 				default:
-					//if (e.which >= 65 && e.which <= 122) { // a-Z
+					if (e.which >= 65 && e.which <= 122) { // a-Z
 						if (currentDirection == "horizontal")
-							moveHorizontal(txt, "right");
+							moveHorizontal(e, txt, "right");
 						else
-							moveVertical(txt, "down");
-					//} else {
-					//	txt.value = "";
-					//	e.preventDefault();
-					//}
-					//moveHorizontal(txt);
+							moveVertical(e, txt, "down");
+					} else {
+						console.error("Invalid character");
+						txt.value = "";
+						e.preventDefault();
+					}
 					break;
 			}
 			setCurrentPos(row, col);
@@ -531,9 +548,9 @@
 
 			if (currentDirection == "horizontal") {
 				for (var r = row; r < rowCount(); r++) {
-					console.log("r=" + r)
+					//console.log("r=" + r)
 					for (var c = col; c < columnCount() - 1; c++) {
-						console.log("c=" + c)
+						//console.log("c=" + c)
 						var id1 = buildId("#Cell", r, c);
 						var cell1 = $(id1);
 						if (!cell1.length) break;
@@ -561,53 +578,52 @@
 			}
 		}
 
-		function moveVertical(txt, dir) {
-			var row = getRow(txt.id);
-			var col = getColumn(txt.id);
+		var lastTargetId = "";
 
-			if (row != NaN && col != NaN) {
-				var nextRow = dir == "up" ? row - 1 : row + 1;
-				var elem = $(buildId("#Text", nextRow, col));
-				if (elem.length) {
-					elem.select();
-					elem.focus();
-				}
-			}
-		}
+		function moveHorizontal(e, txt, dir) {
+			console.log("lastTargetId=" + lastTargetId + "currentTargetId=" + e.currentTarget.id)
+			console.warn("moveHorizontal called from " + e.type);
 
-		function moveHorizontal(txt, dir) {
-			var rows = rowCount();
-			var cols = columnCount();
-			var row = getRow(txt.id);
-			var col = getColumn(txt.id);
-
-			if (dir == "left") {
-				for (var r = row; r >= 0; r--) {
-					for (var c = col; c >= 0; c--) {
-						var id = buildId("Text", r, c);
-						var elem = document.getElementById(id);
-						if (elem != null && elem.id != txt.id) {
-							elem.select();
-							elem.focus();
-							return;
-						}
+			if (e.currentTarget.id != lastTargetId) {
+				var row = getRow(txt.id);
+				var col = getColumn(txt.id);
+				//console.warn("row=" + row + "col=" + col)
+				if (row != NaN && col != NaN) {
+					var nextCol = dir == "left" ? col - 1 : col + 1;
+					var elem = $(buildId("#Text", row, nextCol));
+					if (elem.length) {
+						elem.select();
+						elem.focus();
 					}
-					col = cols;
 				}
 			} else {
-				for (var r = row; r < rows; r++) {
-					for (var c = col; c < cols; c++) {
-						var id = buildId("Text", r, c);
-						var elem = document.getElementById(id);
-						if (elem != null && elem.id != txt.id) {
-							elem.select();
-							elem.focus();
-							return;
-						}
-					}
-					col = 0;
-				}
+				e.preventDefault();
 			}
+
+			lastTargetId = e.currentTarget.id;
+		}
+
+		function moveVertical(e, txt, dir) {
+			console.log("lastTargetId=" + lastTargetId + "currentTargetId=" + e.currentTarget.id)
+			console.warn("moveVertical called from " + e.type);
+
+			if (e.currentTarget.id != lastTargetId) {
+				var row = getRow(txt.id);
+				var col = getColumn(txt.id);
+				//console.warn("row=" + row + "col=" + col)
+				if (row != NaN && col != NaN) {
+					var nextRow = dir == "up" ? row - 1 : row + 1;
+					var elem = $(buildId("#Text", nextRow, col));
+					if (elem.length) {
+						elem.select();
+						elem.focus();
+					}
+				}
+			} else {
+				e.preventDefault();
+			}
+			
+			lastTargetId = e.currentTarget.id;
 		}
 		
 		function setBackgrounds() {
